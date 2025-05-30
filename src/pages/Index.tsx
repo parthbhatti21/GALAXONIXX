@@ -5,11 +5,16 @@ import SolarSystem from '@/components/SolarSystem';
 import PlanetDetails from '@/components/PlanetDetails';
 import DiscoveryNotification from '@/components/DiscoveryNotification';
 import TravelAnimation from '@/components/TravelAnimation';
+import Auth from '@/components/Auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useGameState } from '@/hooks/useGameState';
 import { PlanetData } from '@/components/Planet';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
 const Index = () => {
+  const { user, loading, signOut } = useAuth();
   const { 
     gameState, 
     planets, 
@@ -19,7 +24,7 @@ const Index = () => {
     refuelShip,
     purchaseCredits,
     purchaseFuel
-  } = useGameState();
+  } = useGameState(user?.id);
   
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [currentDiscovery, setCurrentDiscovery] = useState<{
@@ -39,8 +44,8 @@ const Index = () => {
     }
   };
 
-  const handleExplore = (planet: PlanetData) => {
-    const result = explorePlanet(planet);
+  const handleExplore = async (planet: PlanetData) => {
+    const result = await explorePlanet(planet);
     if (result.success) {
       setCurrentDiscovery({
         discovery: result.discovery,
@@ -64,10 +69,38 @@ const Index = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully!');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth onAuthSuccess={() => {}} />;
+  }
+
   const currentPlanetData = planets.find(p => p.id === gameState.currentPlanet);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Sign out button */}
+      <Button
+        onClick={handleSignOut}
+        variant="outline"
+        size="sm"
+        className="absolute top-4 right-4 z-50 bg-slate-800/80 backdrop-blur-sm border-slate-600 text-white hover:bg-slate-700"
+      >
+        <LogOut className="w-4 h-4 mr-2" />
+        Sign Out
+      </Button>
+
       {/* Game Dashboard */}
       <GameDashboard
         credits={gameState.credits}

@@ -1,7 +1,16 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Globe as PlanetIcon, Rocket, Star, Fuel } from 'lucide-react';
+
+export interface MoonData {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  gradient: string;
+}
 
 export interface PlanetData {
   id: string;
@@ -14,6 +23,7 @@ export interface PlanetData {
   gradient: string;
   environment: string;
   gaese: string[];
+  moons: MoonData[];
 }
 
 interface PlanetProps {
@@ -58,6 +68,11 @@ const Planet = ({
           <p className="text-xs text-slate-400">
             Gaese Species: {planet.gaese.length} types available
           </p>
+          {planet.moons.length > 0 && (
+            <p className="text-xs text-slate-400">
+              Moons: {planet.moons.map(moon => moon.name).join(', ')}
+            </p>
+          )}
         </div>
 
         {!isCurrentLocation && (
