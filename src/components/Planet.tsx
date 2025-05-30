@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Planet as PlanetIcon, Rocket, Star, Fuel } from 'lucide-react';
+import { Globe as PlanetIcon, Rocket, Star, Fuel } from 'lucide-react';
 
 export interface PlanetData {
   id: string;

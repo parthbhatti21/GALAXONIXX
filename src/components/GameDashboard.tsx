@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Rocket, Fuel, CircleDollarSign, Planet, Star } from 'lucide-react';
+import { Rocket, Fuel, CircleDollarSign, Globe, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface GameDashboardProps {
@@ -52,7 +51,7 @@ const GameDashboard = ({ credits, fuel, maxFuel, explorationsCount, currentPlane
             </div>
 
             <div className="flex items-center gap-2">
-              <Planet className="w-5 h-5 text-green-400" />
+              <Globe className="w-5 h-5 text-green-400" />
               <div>
                 <p className="text-slate-400">Location</p>
                 <p className="font-bold text-green-400">{currentPlanet}</p>
