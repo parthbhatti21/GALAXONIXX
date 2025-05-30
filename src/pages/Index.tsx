@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import GameDashboard from '@/components/GameDashboard';
 import SolarSystem from '@/components/SolarSystem';
@@ -11,7 +10,8 @@ import { useGameState } from '@/hooks/useGameState';
 import { PlanetData } from '@/components/Planet';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, ShoppingCart } from 'lucide-react';
+import ShopPanel from '@/components/ShopPanel';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -23,7 +23,9 @@ const Index = () => {
     explorePlanet, 
     refuelShip,
     purchaseCredits,
-    purchaseFuel
+    purchaseFuel,
+    claimFreeCredits,
+    canClaimFreeCredits
   } = useGameState(user?.id);
   
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
@@ -31,15 +33,43 @@ const Index = () => {
     discovery: string;
     creditsEarned: number;
   } | null>(null);
+  const [isShopOpen, setIsShopOpen] = useState(false);
 
   const handlePlanetSelect = (planet: PlanetData) => {
+    if (planet.id === gameState.currentPlanet) {
+      setSelectedPlanet(null);
+      return;
+    }
     setSelectedPlanet(planet);
-    if (planet.id !== gameState.currentPlanet) {
-      if (gameState.credits >= planet.travelCost) {
-        travelToPlanet(planet);
-        toast.success(`Traveling to ${planet.name}...`);
-      } else {
+  };
+
+  const handleTravel = async (planet: PlanetData) => {
+    if (gameState.credits >= planet.travelCost && gameState.fuel >= 20) {
+      travelToPlanet(planet);
+      toast.success(`Traveling to ${planet.name}...`);
+
+      setTimeout(() => {
+        const availableDiscoveries = planet.gaese.filter(
+          (_, index) => !gameState.explorations[planet.id] || 
+          gameState.explorations[planet.id] <= index
+        );
+        
+        if (availableDiscoveries.length > 0) {
+          const randomDiscovery = availableDiscoveries[Math.floor(Math.random() * availableDiscoveries.length)];
+          const creditsEarned = Math.floor(Math.random() * 100) + 50;
+          
+          setCurrentDiscovery({
+            discovery: randomDiscovery,
+            creditsEarned
+          });
+        }
+      }, 2000);
+    } else {
+      if (gameState.credits < planet.travelCost) {
         toast.error('Insufficient credits for travel!');
+      }
+      if (gameState.fuel < 20) {
+        toast.error('Insufficient fuel for travel!');
       }
     }
   };
@@ -90,28 +120,64 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Sign out button */}
-      <Button
-        onClick={handleSignOut}
-        variant="outline"
-        size="sm"
-        className="absolute top-4 right-4 z-50 bg-slate-800/80 backdrop-blur-sm border-slate-600 text-white hover:bg-slate-700"
-      >
-        <LogOut className="w-4 h-4 mr-2" />
-        Sign Out
-      </Button>
+      {/* Top Navigation Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-slate-900/90 backdrop-blur-md border-b border-purple-500/30">
+        {/* Left Section - Logo and Name */}
+        <div className="flex items-center gap-4">
+          <img 
+            src="./public/planates_images/logo.png" 
+            alt="Galaxonixx Logo" 
+            className="h-8 w-auto"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-[length:200%_auto] animate-[gradient_8s_linear_infinite]">
+            GALAXONIXX
+          </h1>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-6">
+          <Button
+            onClick={() => setIsShopOpen(!isShopOpen)}
+            variant="outline"
+            size="sm"
+            className="bg-slate-800/80 hover:bg-slate-700 border-purple-500/30 text-white transition-all duration-200"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Store
+          </Button>
+
+          <div className="text-white/90 font-medium px-4 py-2 rounded-lg bg-slate-800/50 border border-purple-500/20">
+            <span className="text-purple-400">Explorer</span> {user.user_metadata?.username || user.email?.split('@')[0] || 'Unknown'}
+          </div>
+
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            size="sm"
+            className="bg-slate-800/80 hover:bg-slate-700 border-purple-500/30 text-white transition-all duration-200"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
 
       {/* Game Dashboard */}
-      <GameDashboard
-        credits={gameState.credits}
-        fuel={gameState.fuel}
-        maxFuel={gameState.maxFuel}
-        explorationsCount={gameState.totalDiscoveries}
-        currentPlanet={currentPlanetData?.name || 'Unknown'}
-      />
+      <div className="mt-[60px]">
+        <GameDashboard
+          credits={gameState.credits}
+          fuel={gameState.fuel}
+          maxFuel={gameState.maxFuel}
+          explorationsCount={gameState.totalDiscoveries}
+          currentPlanet={currentPlanetData?.name || 'Unknown'}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="flex h-screen">
+      <div className="flex h-[calc(100vh-6rem)] mt-[5px]">
         {/* Solar System View */}
         <div className="flex-1">
           <SolarSystem
@@ -123,23 +189,52 @@ const Index = () => {
         </div>
 
         {/* Planet Details Sidebar */}
-        {selectedPlanet && (
-          <div className="w-96 p-4 bg-slate-900/50 backdrop-blur-sm border-l border-purple-500/30">
+        <div className="w-96 p-4 bg-slate-900/50 backdrop-blur-sm border-l border-purple-500/30">
+          {selectedPlanet && selectedPlanet.id !== gameState.currentPlanet ? (
             <PlanetDetails
               planet={selectedPlanet}
-              discoveries={gameState.explorations[selectedPlanet.id] || 0}
-              onExplore={handleExplore}
               onRefuel={handleRefuel}
               onPurchaseCredits={purchaseCredits}
               onPurchaseFuel={purchaseFuel}
-              canRefuel={gameState.credits >= selectedPlanet.refuelCost && gameState.fuel < gameState.maxFuel}
-              currentCredits={gameState.credits}
-              currentFuel={gameState.fuel}
+              onClaimFreeCredits={claimFreeCredits}
+              canClaimFreeCredits={canClaimFreeCredits}
+              credits={gameState.credits}
+              fuel={gameState.fuel}
               maxFuel={gameState.maxFuel}
+              onTravel={() => handleTravel(selectedPlanet)}
             />
-          </div>
-        )}
+          ) : currentPlanetData && (
+            <PlanetDetails
+              planet={currentPlanetData}
+              onRefuel={handleRefuel}
+              onPurchaseCredits={purchaseCredits}
+              onPurchaseFuel={purchaseFuel}
+              onClaimFreeCredits={claimFreeCredits}
+              canClaimFreeCredits={canClaimFreeCredits}
+              credits={gameState.credits}
+              fuel={gameState.fuel}
+              maxFuel={gameState.maxFuel}
+              onTravel={() => {}}
+            />
+          )}
+        </div>
       </div>
+
+      {/* Shop Panel */}
+      {isShopOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+          <ShopPanel 
+            onPurchaseCredits={purchaseCredits}
+            onPurchaseFuel={purchaseFuel}
+            currentCredits={gameState.credits}
+            currentFuel={gameState.fuel}
+            maxFuel={gameState.maxFuel}
+            onClose={() => setIsShopOpen(false)}
+            onClaimFreeCredits={claimFreeCredits}
+            canClaimFreeCredits={canClaimFreeCredits}
+          />
+        </div>
+      )}
 
       {/* Discovery Notification */}
       {currentDiscovery && (
