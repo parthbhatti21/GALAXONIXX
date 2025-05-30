@@ -139,12 +139,28 @@ export const useGameState = () => {
     return false;
   }, [gameState.credits, gameState.fuel, gameState.maxFuel]);
 
+  const purchaseCredits = useCallback((amount: number) => {
+    setGameState(prev => ({
+      ...prev,
+      credits: prev.credits + amount
+    }));
+  }, []);
+
+  const purchaseFuel = useCallback((amount: number) => {
+    setGameState(prev => ({
+      ...prev,
+      fuel: Math.min(prev.maxFuel, prev.fuel + amount)
+    }));
+  }, []);
+
   return {
     gameState,
     planets: PLANETS,
     isLoading,
     travelToPlanet,
     explorePlanet,
-    refuelShip
+    refuelShip,
+    purchaseCredits,
+    purchaseFuel
   };
 };

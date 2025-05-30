@@ -10,7 +10,17 @@ import { PlanetData } from '@/components/Planet';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { gameState, planets, isLoading, travelToPlanet, explorePlanet, refuelShip } = useGameState();
+  const { 
+    gameState, 
+    planets, 
+    isLoading, 
+    travelToPlanet, 
+    explorePlanet, 
+    refuelShip,
+    purchaseCredits,
+    purchaseFuel
+  } = useGameState();
+  
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [currentDiscovery, setCurrentDiscovery] = useState<{
     discovery: string;
@@ -81,13 +91,18 @@ const Index = () => {
 
         {/* Planet Details Sidebar */}
         {selectedPlanet && (
-          <div className="w-80 p-4 bg-slate-900/50 backdrop-blur-sm border-l border-purple-500/30 overflow-y-auto">
+          <div className="w-96 p-4 bg-slate-900/50 backdrop-blur-sm border-l border-purple-500/30">
             <PlanetDetails
               planet={selectedPlanet}
               discoveries={gameState.explorations[selectedPlanet.id] || 0}
               onExplore={handleExplore}
               onRefuel={handleRefuel}
+              onPurchaseCredits={purchaseCredits}
+              onPurchaseFuel={purchaseFuel}
               canRefuel={gameState.credits >= selectedPlanet.refuelCost && gameState.fuel < gameState.maxFuel}
+              currentCredits={gameState.credits}
+              currentFuel={gameState.fuel}
+              maxFuel={gameState.maxFuel}
             />
           </div>
         )}
